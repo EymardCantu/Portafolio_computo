@@ -1,111 +1,41 @@
-name: Deploy Graph to GitHub Pages
+name: Build and deploy graph
 
 on:
- push:
-   branches:
-     - main
+  push:
+    branches:
+      - main
 
 jobs:
- build:
-   runs-on: ubuntu-latest
-   steps:
-   - name: Checkout repo
-     uses: actions/checkout@v3
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-   - name: Set up Python
-     uses: actions/setup-python@v3
-     with:
-       python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-   - name: Install dependencies
-     run: pip install pandas matplotlib elasticsearch
+      - name: Install dependencies
+        run: |
+          pip install pandas matplotlib elasticsearch
 
-   - name: Generate Graph
-     run: python plot.py
+      - name: Run script
+        env:
+          ES_HOST: "http://localhost:9200"
+          ES_USER: "elastic"
+          ES_PASSWORD: "password"
+        run: python plot.py
 
-   - name: Prepare GitHub Pages
-     run: |
-       mkdir -p site
-       touch site/.nojekyll
-       find docs -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.svg" \) -exec cp {} site/ \;
-       echo '<!DOCTYPE html>
-       <html lang="es">
-       <head>
-           <meta charset="UTF-8">
-           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-           <title>Portafolio de Cómputo</title>
-           <style>
-               body {
-                   font-family: Arial, sans-serif;
-                   max-width: 900px;
-                   margin: 0 auto;
-                   padding: 20px;
-                   line-height: 1.6;
-               }
-               .gallery {
-                   display: grid;
-                   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                   gap: 20px;
-                   margin: 30px 0;
-               }
-               .gallery figure {
-                   margin: 0;
-                   border: 1px solid #ddd;
-                   padding: 10px;
-                   border-radius: 5px;
-                   background: #f9f9f9;
-               }
-               img {
-                   max-width: 100%;
-                   height: auto;
-                   display: block;
-               }
-               figcaption {
-                   text-align: center;
-                   margin-top: 10px;
-                   font-size: 0.9em;
-                   color: #555;
-               }
-               h1, h2 {
-                   color: #333;
-                   border-bottom: 2px solid #eee;
-                   padding-bottom: 10px;
-               }
-           </style>
-       </head>
-       <body>
-           <h1>Mi Portafolio de Cómputo</h1>
-           <p>Visualizaciones generadas automáticamente:</p>
-           
-           <div class="gallery" id="gallery">
-           </div>
-           
-           <script>
-               document.addEventListener("DOMContentLoaded", function() {
-                   const gallery = document.getElementById("gallery");
-                   
-                   ["grafico.png", "grafico.jpg", "grafico.svg", "graph.png", "plot.png", "visualization.png"]
-                   .forEach(filename => {
-                       const img = new Image();
-                       img.onload = function() {
-                           const figure = document.createElement("figure");
-                           figure.innerHTML = `
-                               <img src="${filename}" alt="Visualización: ${filename}">
-                               <figcaption>Visualización: ${filename}</figcaption>
-                           `;
-                           gallery.appendChild(figure);
-                       };
-                       img.onerror = function() { };
-                       img.src = filename;
-                   });
-               });
-           </script>
-       </body>
-       </html>' > site/index.html
+      - name: Ensure docs directory exists
+        run: |
+          mkdir -p docs
+          touch docs/.nojekyll
+          echo "<html><body><h1>GitHub Pages está funcionando</h1></body></html>" > docs/index.html
 
-   - name: Deploy to GitHub Pages
-     uses: peaceiris/actions-gh-pages@v3
-     with:
-       github_token: ${{ secrets.GITHUB_TOKEN }}
-       publish_dir: ./site
-       force_orphan: true
+      - name: Upload to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
