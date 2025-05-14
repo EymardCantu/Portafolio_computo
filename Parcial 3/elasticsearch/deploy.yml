@@ -23,24 +23,37 @@ jobs:
     - name: Generate Graph
       run: python plot.py
 
-    - name: Ensure docs directory exists and copy files
+    - name: Prepare Jekyll structure
       run: |
-        mkdir -p docs
-        touch docs/.nojekyll
+        mkdir -p docs/assets/css
+        
+        echo '---
+        ---
+        
+        @import "{{ site.theme }}";
+        ' > docs/assets/css/style.scss
+        
+        echo 'theme: jekyll-theme-primer
+        title: Mi portafolio de cómputo
+        description: Visualizaciones generadas
+        ' > docs/_config.yml
+        
+
+        echo '---
+        layout: default
+        ---
+        
+
+        
+        visualizaciones generadas:
+        
+        ![Gráfico generado](./grafico.png)
+        ' > docs/index.md
+        
         cp *.png docs/ 2>/dev/null || true
         cp *.jpg docs/ 2>/dev/null || true
         cp *.jpeg docs/ 2>/dev/null || true
         cp *.svg docs/ 2>/dev/null || true
-        echo "<html><head><title>Gráfico generado</title></head><body>" > docs/index.html
-        echo "<h1>Gráfico generado</h1>" >> docs/index.html
-        for img in docs/*.png docs/*.jpg docs/*.jpeg docs/*.svg; do
-          if [ -f "$img" ]; then
-            filename=$(basename "$img")
-            echo "<img src=\"$filename\" alt=\"Gráfico generado\" style=\"max-width:100%;\"><br>" >> docs/index.html
-            break
-          fi
-        done
-        echo "</body></html>" >> docs/index.html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
