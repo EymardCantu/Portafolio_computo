@@ -23,11 +23,24 @@ jobs:
     - name: Generate Graph
       run: python plot.py
 
-    - name: Ensure docs directory exists
+    - name: Ensure docs directory exists and copy files
       run: |
         mkdir -p docs
         touch docs/.nojekyll
-        echo "<html><body><h1>GitHub Pages está funcionando</h1></body></html>" > docs/index.html
+        cp *.png docs/ 2>/dev/null || true
+        cp *.jpg docs/ 2>/dev/null || true
+        cp *.jpeg docs/ 2>/dev/null || true
+        cp *.svg docs/ 2>/dev/null || true
+        echo "<html><head><title>Gráfico generado</title></head><body>" > docs/index.html
+        echo "<h1>Gráfico generado</h1>" >> docs/index.html
+        for img in docs/*.png docs/*.jpg docs/*.jpeg docs/*.svg; do
+          if [ -f "$img" ]; then
+            filename=$(basename "$img")
+            echo "<img src=\"$filename\" alt=\"Gráfico generado\" style=\"max-width:100%;\"><br>" >> docs/index.html
+            break
+          fi
+        done
+        echo "</body></html>" >> docs/index.html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
