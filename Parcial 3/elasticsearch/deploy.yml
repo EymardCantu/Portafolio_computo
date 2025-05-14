@@ -23,8 +23,14 @@ jobs:
     - name: Generate Graph
       run: python plot.py
 
+    - name: Ensure docs directory exists
+      run: |
+        mkdir -p docs
+        touch docs/.nojekyll
+        echo "<html><body><h1>GitHub Pages está funcionando</h1></body></html>" > docs/index.html
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs
+        publish_dir: ./docs
